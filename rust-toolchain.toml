@@ -1,0 +1,7 @@
+# Lint-reproducibility gate: pedantic/nursery gain lints every release, so CI and local
+# builds must use the same toolchain. Keep in sync with `rust-version` in Cargo.toml and
+# `msrv` in clippy.toml. Raising it is a breaking change.
+[toolchain]
+channel = "1.100"
+components = ["clippy", "rustfmt", "rust-src"]
+targets = ["thumbv7em-none-eabihf"]

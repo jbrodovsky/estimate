@@ -1,0 +1,36 @@
+[package]
+name = "estimate"
+description = "Recursive Bayesian estimation on manifolds, written the way the math is written."
+readme = "../README.md"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+categories.workspace = true
+keywords.workspace = true
+rust-version.workspace = true
+
+[features]
+default = ["std"]
+# `std` implies `alloc`; `alloc` enables dynamically sized (`Dyn`) states and, later,
+# Vec-backed particle/histogram/ensemble storage.
+std = ["alloc", "nalgebra/std", "num-traits/std", "approx/std"]
+alloc = ["nalgebra/alloc"]
+# Float math for `no_std` targets.
+libm = ["nalgebra/libm", "num-traits/libm"]
+
+[dependencies]
+nalgebra.workspace = true
+rand_core.workspace = true
+approx.workspace = true
+num-traits.workspace = true
+
+[dev-dependencies]
+approx = { workspace = true, features = ["std"] }
+proptest.workspace = true
+nalgebra = { workspace = true, features = ["std"] }
+
+[lints]
+workspace = true

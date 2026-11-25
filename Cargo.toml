@@ -1,0 +1,62 @@
+[workspace]
+members = ["estimate", "estimate-derive"]
+resolver = "3"
+
+[workspace.package]
+version = "0.0.1"
+authors = ["James Brodovsky"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+homepage = "https://www.estimate.rs"
+repository = "https://github.com/jbrodovsky/estimate"
+categories = ["science", "science::robotics", "mathematics", "no-std", "embedded"]
+keywords = ["kalman", "filter", "estimation", "bayesian", "manifold"]
+# Minimum supported Rust version. Keep in sync with rust-toolchain.toml and clippy.toml.
+rust-version = "1.91"
+
+[workspace.dependencies]
+# nalgebra is part of the public API (state, covariance and Jacobian types), so it is
+# pinned to one minor version: two copies in one build cannot exchange matrices.
+nalgebra = { version = "0.35", default-features = false }
+rand_core = { version = "0.10", default-features = false }
+approx = { version = "0.5", default-features = false }
+num-traits = { version = "0.2", default-features = false }
+proptest = "1.12"
+
+[workspace.lints.rust]
+unknown_lints = "allow"
+rust_2018_idioms = { level = "deny", priority = -1 }
+unreachable_pub = "deny"
+missing_debug_implementations = "deny"
+missing_docs = "deny"
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
+
+# Zero-panic policy for library code. Tests are exempted in clippy.toml.
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+indexing_slicing = "deny"
+missing_errors_doc = "deny"
+missing_panics_doc = "deny"
+
+# Relaxed on purpose, with reasons. Relax lints here, once, never with call-site #[allow].
+# Equations are transcribed with parallel names (x/xp, h/hj, p/pp) on purpose.
+similar_names = "allow"
+many_single_char_names = "allow"
+# Rewrites a*b + c as mul_add, which makes equations unreadable -- against the core thesis.
+# Where fused multiply-add matters numerically, use it deliberately.
+suboptimal_flops = "allow"
+# False positives on filter acronyms (EnKF, RBPF) and math notation in docs.
+doc_markdown = "allow"
+# Signature noise with no defect signal.
+must_use_candidate = "allow"
+module_name_repetitions = "allow"
+
+[profile.test]
+opt-level = 2
