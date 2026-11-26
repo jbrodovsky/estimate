@@ -8,3 +8,4 @@
 - Toolchain is pinned in rust-toolchain.toml; keep `rust-version` and clippy's `msrv` in sync.
 - See docs/design.md before changing a public trait.
 - Read the README for project philosophy and design guide
+- I prefer larger rust modules in single *.rs files. Only move to folder-based modules when it makes sense that we'll have several sub-modules
