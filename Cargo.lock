@@ -140,7 +140,6 @@ dependencies = [
  "nalgebra",
  "num-traits",
  "proptest",
- "rand_core",
 ]
 
 [[package]]
