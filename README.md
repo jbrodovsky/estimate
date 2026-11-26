@@ -184,11 +184,11 @@ Preview the docs with `uvx --with-requirements docs/requirements.txt mkdocs serv
 
 ## Features
 
-| Flag    | Default | Enables                                              |
-|---------|---------|------------------------------------------------------|
+| Flag      | Default | Enables                                                  |
+| --------- | ------- | -------------------------------------------------------- |
 | `std`   | on      | `std` support (implies `alloc`)                      |
 | `alloc` | on      | `Dyn` dimensions, Vec-backed particle/ensemble storage |
-| `libm`  | off     | float math for `no_std` targets                      |
+| `libm`  | off     | float math for `no_std` targets                        |
 
 ## Roadmap
 
