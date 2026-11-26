@@ -12,7 +12,7 @@
 pub trait Filter {
     /// The filter's state
     type State;
-    /// The fitler's belief
+    /// The filter's belief
     type Belief; // (mean, cov) | particles | probability vector
     /// Access the belief
     fn belief(&self) -> &Self::Belief;
