@@ -41,3 +41,5 @@ decisions that shape the code.
   `panic`, `indexing_slicing` denied) and a bare-metal CI build.
 - Static dispatch only; no `dyn Filter`.
 - nalgebra is public API and pinned to one minor version.
+- Public docs follow one template (summary, `# Arguments`, `# Returns`, `# Errors`, a runnable
+  `# Examples`), set out in AGENTS.md and enforced by `cargo xtask doc-lint` in CI.

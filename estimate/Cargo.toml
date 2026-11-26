@@ -33,3 +33,7 @@ nalgebra = { workspace = true, features = ["std"] }
 
 [lints]
 workspace = true
+
+# docs.rs runs rustdoc from the package directory.
+[package.metadata.docs.rs]
+rustdoc-args = ["--html-in-header", "katex-header.html"]

@@ -1,5 +1,5 @@
 [workspace]
-members = ["estimate", "estimate-derive"]
+members = ["estimate", "estimate-derive", "xtask"]
 resolver = "3"
 
 [workspace.package]
@@ -21,6 +21,10 @@ nalgebra = { version = "0.35", default-features = false }
 approx = { version = "0.5", default-features = false }
 num-traits = { version = "0.2", default-features = false }
 proptest = "1.12"
+# Dev tooling only (`xtask doc-lint`); estimate-derive will use syn too.
+syn = { version = "3", features = ["full"] }
+# `span-locations` gives line numbers outside a proc-macro, for `file:line` diagnostics.
+proc-macro2 = { version = "1", features = ["span-locations"] }
 
 [workspace.lints.rust]
 unknown_lints = "allow"
@@ -44,6 +48,13 @@ indexing_slicing = "deny"
 missing_errors_doc = "deny"
 missing_panics_doc = "deny"
 
+# Doc-comment style. Structure (summary, # Arguments, # Returns, # Errors, # Examples) is
+# checked by `cargo xtask doc-lint`; these cover what clippy can see. See AGENTS.md.
+# Restriction group, so opted into explicitly: every doc paragraph ends in punctuation.
+doc_paragraphs_missing_punctuation = "deny"
+# `unsafe_code` is forbidden, but if that is ever relaxed, unsafe fns must say why they are.
+missing_safety_doc = "deny"
+
 # Relaxed on purpose, with reasons. Relax lints here, once, never with call-site #[allow].
 # Equations are transcribed with parallel names (x/xp, h/hj, p/pp) on purpose.
 similar_names = "allow"
@@ -56,6 +67,12 @@ doc_markdown = "allow"
 # Signature noise with no defect signal.
 must_use_candidate = "allow"
 module_name_repetitions = "allow"
+
+# Every rustdoc lint, stable ones only: broken/private intra-doc links, invalid code blocks and
+# attributes, bare URLs, unescaped backticks, missing crate docs, invalid tables, footnotes.
+# `missing_doc_code_examples` is still nightly-only; `xtask doc-lint` enforces examples instead.
+[workspace.lints.rustdoc]
+all = { level = "deny", priority = -1 }
 
 # Cargo's manifest lints warn by default, and `-D warnings` in RUSTFLAGS does not reach them,
 # so CI would pass with a dead dependency. Deny them here so local builds and CI agree.

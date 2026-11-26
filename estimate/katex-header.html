@@ -1,0 +1,26 @@
+<!-- KaTeX for rustdoc, passed with `--html-in-header` (see .cargo/config.toml, the justfile, CI
+     and `[package.metadata.docs.rs]`).
+
+     Display math is a ```math code block: rustdoc leaves its TeX untouched (no Markdown escapes)
+     and emits <pre class="language-math">, which is rendered here. Inline math is $...$ in prose,
+     rendered by auto-render, which skips <pre> and <code>. GitHub renders both forms natively. -->
+<link rel="stylesheet" href="https://unpkg.com/katex@0/dist/katex.min.css">
+<script defer src="https://unpkg.com/katex@0/dist/katex.min.js"></script>
+<script defer src="https://unpkg.com/katex@0/dist/contrib/auto-render.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    for (const block of document.querySelectorAll("pre.language-math")) {
+      const math = document.createElement("div");
+      math.className = "katex-display-block";
+      katex.render(block.textContent, math, { displayMode: true, throwOnError: false });
+      (block.closest(".example-wrap") ?? block).replaceWith(math);
+    }
+    renderMathInElement(document.body, {
+      delimiters: [{ left: "$", right: "$", display: false }],
+      throwOnError: false,
+    });
+  });
+</script>
+<style>
+  .katex-display-block { overflow-x: auto; overflow-y: hidden; }
+</style>

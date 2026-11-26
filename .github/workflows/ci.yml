@@ -18,7 +18,8 @@ env:
   # Any rustc or clippy warning fails the build. Cargo's own manifest lints are not reached by
   # RUSTFLAGS; they are denied in `[workspace.lints.cargo]` in Cargo.toml instead.
   RUSTFLAGS: -D warnings
-  RUSTDOCFLAGS: -D warnings
+  # Replaces `build.rustdocflags` in .cargo/config.toml, so the KaTeX header is repeated here.
+  RUSTDOCFLAGS: -D warnings --html-in-header estimate/katex-header.html
 
 # Every Rust job installs the toolchain pinned in rust-toolchain.toml (channel, components and
 # the thumbv7em target). That pin is the lint-reproducibility gate: CI and local builds must
@@ -76,6 +77,18 @@ jobs:
         run: rustup toolchain install && rustup show
       - uses: Swatinem/rust-cache@v2
       - run: cargo doc --workspace --no-deps
+
+  doc-lint:
+    name: doc comments (xtask doc-lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pinned toolchain
+        run: rustup toolchain install && rustup show
+      - uses: Swatinem/rust-cache@v2
+      # Summary, # Arguments, # Returns, # Errors and a runnable # Examples on every public item.
+      # The doctests themselves run in the `test` job. Template: "Doc comments" in AGENTS.md.
+      - run: cargo xtask doc-lint
 
   user-guide:
     name: user guide (mkdocs)
