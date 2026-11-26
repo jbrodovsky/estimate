@@ -60,5 +60,13 @@ nav:
       - Models: concepts/models.md
       - Filters: concepts/filters.md
   - Filters: filters/index.md
-  - Examples: examples/index.md
+  - Examples:
+      - examples/index.md
+      - 2-D target tracking: examples/tracking.md
+      - 2-D navigation: examples/navigation.md
+      - Attitude on SO(3): examples/attitude.md
+      - Epidemic (SEIR): examples/epidemic.md
+      - Battery state of charge: examples/battery.md
+      - Lorenz-96: examples/lorenz96.md
+      - Machine health: examples/machine-health.md
   - Design decisions: design.md

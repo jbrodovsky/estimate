@@ -44,5 +44,5 @@ $$
 
 Any type can implement `Manifold`. Until `#[derive(Manifold)]` lands, a composite state such as a
 planar pose $(p, \theta) \in \mathbb{R}^2 \times SO(2)$ implements $\boxplus$ and $\boxminus$
-componentwise by hand. The [2-D navigation example](../examples/index.md#2-d-3-dof-ground-vehicle-navigation)
+componentwise by hand. The [2-D navigation example](../examples/navigation.md)
 does exactly this.
