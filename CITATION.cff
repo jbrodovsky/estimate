@@ -9,8 +9,9 @@ abstract: >-
 authors:
   - family-names: Brodovsky
     given-names: James
+    orcid: "https://orcid.org/0000-0002-1371-9044"
 repository-code: "https://github.com/jbrodovsky/estimate"
-url: "https://www.estimate.rs"
+url: "https://github.com/jbrodovsky/estimate"
 license:
   - MIT
   - Apache-2.0
