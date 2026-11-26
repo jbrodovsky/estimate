@@ -57,5 +57,11 @@ doc_markdown = "allow"
 must_use_candidate = "allow"
 module_name_repetitions = "allow"
 
+# Cargo's manifest lints warn by default, and `-D warnings` in RUSTFLAGS does not reach them,
+# so CI would pass with a dead dependency. Deny them here so local builds and CI agree.
+[workspace.lints.cargo]
+unused_dependencies = "deny"
+unused_workspace_dependencies = "deny"
+
 [profile.test]
 opt-level = 2
