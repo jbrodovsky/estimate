@@ -10,10 +10,30 @@
 //!
 //! # For implementors
 //!
-//! Compute every intermediate (x⁻, P⁻, S, K, weights, …) into temporaries and assign to `self`
-//! only after the last fallible step. Never write a partial result into the belief.
+//! Compute every intermediate ($x^-$, $P^-$, $S$, $K$, weights, …) into temporaries and assign to
+//! `self` only after the last fallible step. Never write a partial result into the belief.
 //!
 //! `error` sits outside the layer list in the crate docs: every layer may return it.
+//!
+//! # Examples
+//!
+//! A scalar Kalman gain $k = p / s$ needs $s > 0$; a fallible step returns the reason it failed:
+//!
+//! ```
+//! use estimate::FilterError;
+//!
+//! /// k = p / s
+//! fn gain(prior_variance: f64, innovation_variance: f64) -> Result<f64, FilterError> {
+//!     if innovation_variance > 0.0 {
+//!         Ok(prior_variance / innovation_variance)
+//!     } else {
+//!         Err(FilterError::NotPositiveDefinite)
+//!     }
+//! }
+//!
+//! assert_eq!(gain(1.0, 4.0), Ok(0.25));
+//! assert_eq!(gain(1.0, 0.0), Err(FilterError::NotPositiveDefinite));
+//! ```
 
 /// Why a predict or update step failed.
 ///
@@ -23,16 +43,34 @@
 ///
 /// The enum is `#[non_exhaustive]`: new failure modes (for example a manifold mean that fails to
 /// converge) are added by the filters that need them, without a breaking change.
+///
+/// # Examples
+///
+/// ```
+/// use estimate::FilterError;
+///
+/// let mismatch = FilterError::DimensionMismatch { expected: 3, found: 4 };
+/// assert_eq!(mismatch.to_string(), "dimension mismatch: expected 3, found 4");
+///
+/// // Gating is an ordinary outcome: skip the measurement and carry on.
+/// let is_recoverable = |error: FilterError| matches!(error, FilterError::Gated);
+/// assert!(is_recoverable(FilterError::Gated));
+/// assert!(!is_recoverable(mismatch));
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum FilterError {
-    /// A covariance the filter must factor is not positive definite: its Cholesky factorization
-    /// failed. Usually the innovation covariance S = H P Hᵀ + R.
+    /// A covariance the filter must factor is not positive definite.
+    ///
+    /// Its Cholesky factorization failed. Usually the innovation covariance $S = H P H^\top + R$.
     NotPositiveDefinite,
     /// A NaN or ±∞ appeared in the state, covariance, weights or a model output.
     NonFinite,
-    /// Every weight is zero (log wⁱ = −∞) or non-finite, so normalization and
-    /// N_eff = 1 / Σ (wⁱ)² are undefined. Also covers a histogram whose posterior mass is zero.
+    /// Every weight is zero or non-finite, so the weights cannot be normalized.
+    ///
+    /// With every $\log w^i = -\infty$ (or NaN), normalization and
+    /// $N_{\text{eff}} = 1 / \sum_i (w^i)^2$ are undefined. Also covers a histogram whose posterior
+    /// mass is zero.
     Degenerate,
     /// The measurement failed the validation gate and was rejected.
     Gated,

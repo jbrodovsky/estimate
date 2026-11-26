@@ -2,16 +2,17 @@
 #
 # The toolchain comes from rust-toolchain.toml, exactly as in CI, so lints match.
 
-# Same flags as the CI `env:` block: any rustc, clippy or rustdoc warning fails.
+# Same flags as the CI `env:` block: any rustc, clippy or rustdoc warning fails. RUSTDOCFLAGS
+# replaces `build.rustdocflags` in .cargo/config.toml, so the KaTeX header is repeated here.
 export RUSTFLAGS := "-D warnings"
-export RUSTDOCFLAGS := "-D warnings"
+export RUSTDOCFLAGS := "-D warnings --html-in-header estimate/katex-header.html"
 
 # List recipes.
 default:
     @just --list
 
 # Every CI job, in order.
-ci: fmt clippy test rustdoc user-guide bare-metal
+ci: fmt clippy test rustdoc doc-lint user-guide bare-metal
 
 # rustfmt: check formatting.
 fmt:
@@ -40,13 +41,17 @@ clippy-no-std-alloc:
 clippy-no-std-libm:
     cargo clippy --workspace --all-targets --no-default-features --features libm
 
-# test
+# test (unit tests, property tests and doctests)
 test:
     cargo test --workspace
 
 # rustdoc
 rustdoc:
     cargo doc --workspace --no-deps
+
+# doc comments: every public item follows the template in AGENTS.md ("Doc comments").
+doc-lint:
+    cargo xtask doc-lint
 
 # user guide (mkdocs), strict build.
 user-guide:

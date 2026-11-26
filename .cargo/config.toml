@@ -1,0 +1,9 @@
+# `cargo xtask <task>` runs repository tooling from the `xtask` crate.
+[alias]
+xtask = "run --quiet --package xtask --"
+
+# KaTeX in rustdoc, so `$...$` and `$$...$$` in doc comments render as math (same syntax as the
+# mkdocs user guide). The path is relative to the workspace root, where cargo runs rustdoc.
+# A RUSTDOCFLAGS environment variable replaces this list, so CI and the justfile repeat it.
+[build]
+rustdocflags = ["--html-in-header", "estimate/katex-header.html"]
