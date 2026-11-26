@@ -13,8 +13,11 @@ vectors, rotations and poses. One API runs from a desktop research notebook to a
 ```
 estimate/          core crate (no_std): manifold, model, covariance, filter, filter families
 estimate-derive/   #[derive(Manifold)] for composite states (planned)
-docs/design.md     design decisions
+docs/              user guide (MkDocs); docs/design.md records design decisions
+mkdocs.yml         docs site config
 ```
+
+Preview the docs with `uvx --with-requirements docs/requirements.txt mkdocs serve`.
 
 ## Features
 

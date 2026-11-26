@@ -1,0 +1,72 @@
+site_name: estimate
+site_description: Recursive Bayesian estimation in Rust, written the way the math is written.
+repo_url: https://github.com/jbrodovsky/estimate
+repo_name: jbrodovsky/estimate
+edit_uri: edit/main/docs/
+exclude_docs: |
+  requirements.txt
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.footer
+    - content.code.copy
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  # Equations: $...$ inline, $$...$$ display, rendered by KaTeX.
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/katex.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+
+extra_css:
+  - https://unpkg.com/katex@0/dist/katex.min.css
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Concepts:
+      - Manifolds: concepts/manifolds.md
+      - Models: concepts/models.md
+      - Filters: concepts/filters.md
+  - Filters: filters/index.md
+  - Examples:
+      - examples/index.md
+      - 2-D target tracking: examples/tracking.md
+      - 2-D navigation: examples/navigation.md
+      - Attitude on SO(3): examples/attitude.md
+      - Epidemic (SEIR): examples/epidemic.md
+      - Battery state of charge: examples/battery.md
+      - Lorenz-96: examples/lorenz96.md
+      - Machine health: examples/machine-health.md
+  - Design decisions: design.md
