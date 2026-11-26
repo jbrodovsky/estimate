@@ -124,7 +124,7 @@ Feature flags:
 
 | Flag      | Default | Enables                                                                |
 | --------- | ------- | ---------------------------------------------------------------------- |
-| `std`   | on      | `std` error traits, convenience I/O                                  |
+| `std`   | on      | Convenience I/O                                                       |
 | `alloc` | on      | `Dyn` dimensions, `Vec`-backed particle/histogram/ensemble storage |
 | `libm`  | off     | `no_std` math functions                                              |
 | `serde` | off     | Serialization of beliefs and reports                                   |

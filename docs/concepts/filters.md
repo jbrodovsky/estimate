@@ -12,6 +12,16 @@ The core never panics. Every failure (an innovation covariance that is not posit
 non-finite values, particle degeneracy, a gated measurement) comes back as a `FilterError`, and a
 filter that returns an error **leaves its belief unchanged**.
 
+| Variant               | Meaning                                                              |
+| --------------------- | -------------------------------------------------------------------- |
+| `NotPositiveDefinite` | a covariance (usually S = H P Hᵀ + R) failed its Cholesky factorization |
+| `NonFinite`           | a NaN or ±∞ in the state, covariance, weights or a model output     |
+| `Degenerate`          | every particle or histogram weight is zero or non-finite            |
+| `Gated`               | the measurement failed the validation gate; skip it and carry on    |
+| `DimensionMismatch`   | a `Dyn`-sized input does not match the expected dimension           |
+
+The enum is `#[non_exhaustive]`, so match with a `_` arm.
+
 ## Update reports
 
 Every update returns an `UpdateReport` exposing the measurement log-likelihood
