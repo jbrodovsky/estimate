@@ -138,7 +138,7 @@ where
 ///
 /// The checks are plain functions with no allocation, so they run under `no_std`. The sampling
 /// of (x, y, δ) is the implementor's: draw δ inside the injectivity radius (‖δ‖ < π on
-/// rotations), where ⊟ undoes ⊞. [`AxiomViolation`] implements `Error`, so `?` turns it into a
+/// rotations), where ⊟ undoes ⊞. [`AxiomViolation`](axioms::AxiomViolation) implements `Error`, so `?` turns it into a
 /// proptest failure:
 ///
 /// ```ignore
