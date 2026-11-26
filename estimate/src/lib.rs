@@ -17,7 +17,10 @@
 //! - [`fusion`] — time handling around any filter (delayed / out-of-sequence measurements)
 //!
 //! [`error`] sits outside the layers: every layer may return a [`FilterError`].
-#![cfg_attr(not(feature = "std"), no_std)]
+// Tests link `std` so they can assert on `to_string()` and friends in every feature
+// combination. The library itself stays `no_std`: the non-test lib target and the bare-metal
+// CI build check that.
+#![cfg_attr(not(any(feature = "std", test)), no_std)]
 
 pub mod covariance;
 pub mod discrete;

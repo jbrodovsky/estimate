@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # Any rustc or clippy warning fails the build. Cargo's own manifest lints are not reached by
+  # RUSTFLAGS; they are denied in `[workspace.lints.cargo]` in Cargo.toml instead.
+  RUSTFLAGS: -D warnings
+  RUSTDOCFLAGS: -D warnings
+
+# Every Rust job installs the toolchain pinned in rust-toolchain.toml (channel, components and
+# the thumbv7em target). That pin is the lint-reproducibility gate: CI and local builds must
+# see the same pedantic/nursery lint set.
+jobs:
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pinned toolchain
+        run: rustup toolchain install && rustup show
+      - run: cargo fmt --all --check
+
+  clippy:
+    name: clippy (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: default
+            flags: ""
+          - name: no_std
+            flags: --no-default-features
+          - name: no_std + alloc
+            flags: --no-default-features --features alloc
+          - name: no_std + libm
+            flags: --no-default-features --features libm
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pinned toolchain
+        run: rustup toolchain install && rustup show
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: clippy-${{ matrix.name }}
+      - run: cargo clippy --workspace --all-targets ${{ matrix.flags }}
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pinned toolchain
+        run: rustup toolchain install && rustup show
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
+
+  rustdoc:
+    name: rustdoc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pinned toolchain
+        run: rustup toolchain install && rustup show
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo doc --workspace --no-deps
+
+  user-guide:
+    name: user guide (mkdocs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # setup-uv publishes no floating major tag, so it is pinned exactly.
+      - uses: astral-sh/setup-uv@v10.4.0
+      - run: uvx --with-requirements docs/requirements.txt mkdocs build --strict
+
+  bare-metal:
+    name: bare metal (thumbv7em-none-eabihf)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install pinned toolchain
+        run: rustup toolchain install && rustup show
+      - uses: Swatinem/rust-cache@v2
+      # No std on the target, so any accidental std use in the core fails to link here.
+      - run: cargo build -p estimate --no-default-features --features libm --target thumbv7em-none-eabihf
