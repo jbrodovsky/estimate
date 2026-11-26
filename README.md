@@ -41,9 +41,11 @@ A state lives on an n-dimensional manifold; all uncertainty lives in its tangent
 
 ```rust
 pub trait Manifold: Clone {
-    type TangentDim: Dim;                  // Const<N> or Dyn
-    fn oplus(&self, d: &Tangent<Self>) -> Self;   // x ⊞ δ
-    fn ominus(&self, other: &Self) -> Tangent<Self>; // x ⊟ y
+    type Scalar: RealField;
+    type Dim: Dim;                                  // Const<N> or Dyn
+    fn tangent_dim(&self) -> usize;                 // n, at runtime for Dyn
+    fn boxplus(&self, d: &Tangent<Self>) -> Self;   // x ⊞ δ
+    fn boxminus(&self, x: &Self) -> Tangent<Self>;  // y ⊟ x
 }
 ```
 

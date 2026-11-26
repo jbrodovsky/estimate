@@ -40,6 +40,49 @@ $$
 \end{aligned}
 $$
 
+## The trait
+
+```rust
+pub type Tangent<X> = OVector<<X as Manifold>::Scalar, <X as Manifold>::Dim>;
+
+pub trait Manifold: Clone
+where
+    DefaultAllocator: Allocator<Self::Dim>,
+{
+    type Scalar: RealField;
+    type Dim: Dim;
+    fn tangent_dim(&self) -> usize;                     // n
+    fn boxplus(&self, delta: &Tangent<Self>) -> Self;   // x ⊞ δ
+    fn boxminus(&self, x: &Self) -> Tangent<Self>;      // y ⊟ x, called as y.boxminus(&x)
+}
+```
+
+Generic code over `X: Manifold` restates `where DefaultAllocator: Allocator<X::Dim>`; Rust does
+not carry that bound over from the trait.
+
+## Testing an implementation
+
+`estimate::manifold::axioms::check(&x, &y, &delta, tol)` checks both axioms for one sample, with
+residuals
+
+$$
+r_1 = \lVert (x \boxplus \delta) \boxminus x - \delta \rVert, \qquad
+r_2 = \lVert (x \boxplus (y \boxminus x)) \boxminus y \rVert .
+$$
+
+It is `no_std` and allocation-free, and returns an `AxiomViolation` naming the axiom that failed.
+Drive it from `proptest` with samples from your manifold, keeping $\lVert\delta\rVert$ inside the
+injectivity radius ($< \pi$ on rotations):
+
+```rust
+proptest! {
+    #[test]
+    fn my_manifold_axioms(x in my_state(), y in my_state(), delta in small_tangent()) {
+        estimate::manifold::axioms::check(&x, &y, &delta, 1e-9)?;
+    }
+}
+```
+
 ## Your own states
 
 Any type can implement `Manifold`. Until `#[derive(Manifold)]` lands, a composite state such as a
