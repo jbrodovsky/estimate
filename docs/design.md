@@ -23,6 +23,17 @@ decisions that shape the code.
    `usize`), so signatures stay `Result<_, FilterError>`. `Gated` carries no test statistic;
    callers who need it gate themselves using the `UpdateReport`. New variants (UKF mean not
    converging, measurement older than the rollback horizon) land with the issue that returns them.
+8. **`Manifold` signature:** `boxplus(&self, δ) -> Self` and `boxminus(&self, x) -> Tangent<Self>`,
+   with `y.boxminus(&x)` reading y ⊟ x. Both are infallible: tangent vectors always have
+   `tangent_dim()` rows, and callers (filters) uphold that. `Tangent<X>` aliases
+   `OVector<X::Scalar, X::Dim>`. The trait carries `where DefaultAllocator: Allocator<Self::Dim>`;
+   Rust does not imply that bound, so generic code restates it — one more reason users see
+   `Ekf<X>` aliases rather than raw bounds. The trait requires `Clone`.
+9. **Axiom harness:** `manifold::axioms` is plain `no_std`, allocation-free functions
+   (`check`, `check_boxplus_boxminus`, `check_boxminus_boxplus`) returning `AxiomViolation`,
+   not a proptest dependency. Implementors supply the sampling (δ inside the injectivity radius)
+   and call `check` from `proptest!`; `AxiomViolation: Error`, so `?` reports it. Equality on 𝓜
+   is measured through ⊟, so the harness needs nothing beyond the trait.
 
 ## Constraints
 
