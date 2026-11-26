@@ -198,6 +198,20 @@ Preview the docs with `uvx --with-requirements docs/requirements.txt mkdocs serv
 - **v0.2** — UKF, information filter, particle filter, histogram filter, delayed fusion
 - **v0.3** — EnKF, RBPF
 
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, the code rules and
+the pull request checklist. Everyone taking part follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Citing
+
+If you use estimate in research, please cite it. [CITATION.cff](CITATION.cff) has the metadata,
+and GitHub's "Cite this repository" button exports it as BibTeX or APA.
+
 ## License
 
-Dual-licensed under MIT or Apache-2.0, at your option.
+Dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
+
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in
+the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without
+any additional terms or conditions.

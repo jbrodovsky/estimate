@@ -1,0 +1,63 @@
+name: Bug report
+description: Something is wrong, such as a crash, a panic, a wrong estimate or a build failure.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. For security vulnerabilities, follow
+        [SECURITY.md](https://github.com/jbrodovsky/estimate/blob/main/SECURITY.md) instead of opening a public issue.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: The crate version, or the git commit you built from.
+      placeholder: 0.0.1 / a105fae
+    validations:
+      required: true
+  - type: checkboxes
+    id: features
+    attributes:
+      label: Enabled features
+      options:
+        - label: "`std` (default)"
+        - label: "`alloc`"
+        - label: "`libm`"
+  - type: input
+    id: target
+    attributes:
+      label: Target
+      description: The output of `rustc -vV | grep host`, or the cross-compilation target.
+      placeholder: x86_64-unknown-linux-gnu / thumbv7em-none-eabihf
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: The smallest model, filter and inputs that show the problem.
+      render: rust
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened? For numerical issues, give the expected values or
+        the analytic result, if you know it.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead? Include the full error output or panic message.
+    validations:
+      required: true
+  - type: checkboxes
+    id: panic
+    attributes:
+      label: Panic
+      description: Library code should never panic, so a panic is always a bug.
+      options:
+        - label: The library panicked (rather than returning a `FilterError`).

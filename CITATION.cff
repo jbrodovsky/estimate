@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata from this file."
+type: software
+title: estimate
+abstract: >-
+  Recursive Bayesian estimation in Rust, written the way the math is written. Filters only call
+  the model's functions, states live on manifolds, and one no_std API runs from a desktop
+  research notebook to a microcontroller.
+authors:
+  - family-names: Brodovsky
+    given-names: James
+repository-code: "https://github.com/jbrodovsky/estimate"
+url: "https://www.estimate.rs"
+license:
+  - MIT
+  - Apache-2.0
+version: 0.0.1
+keywords:
+  - kalman filter
+  - state estimation
+  - bayesian filtering
+  - manifold
+  - rust
+  - no_std
+  - embedded

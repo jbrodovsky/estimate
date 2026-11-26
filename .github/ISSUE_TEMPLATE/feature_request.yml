@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose a new filter, manifold, capability or API change.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before proposing, please check the README's
+        [scope and non-goals](https://github.com/jbrodovsky/estimate/blob/main/README.md#scope-and-non-goals) and
+        [docs/design.md](https://github.com/jbrodovsky/estimate/blob/main/docs/design.md), which records the design decisions
+        already made.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What do you want to do that you can't do today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API or math
+      description: |
+        Sketch the API, the equations, or both. Equations are welcome: GitHub renders
+        `$...$` and ```` ```math ```` blocks.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Papers, textbooks or other implementations.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This fits the project's scope (recursive Bayesian estimation of state-space
+            models) and isn't one of the v1 non-goals.
+          required: true
