@@ -29,3 +29,6 @@ pub mod particle;
 
 /// Re-export of the linear algebra crate that appears in this crate's public API.
 pub use nalgebra;
+
+/// Re-export of the error types used in this crate.
+pub use error::FilterError;
