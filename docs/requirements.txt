@@ -1,0 +1,4 @@
+# Docs toolchain. Build with:
+#   uvx --with-requirements docs/requirements.txt mkdocs serve
+mkdocs==1.6.1
+mkdocs-material==9.8.2
