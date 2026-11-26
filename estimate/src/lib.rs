@@ -15,6 +15,8 @@
 //! - [`filter`] — how inference is done: belief, predict, update
 //! - [`gaussian`], [`particle`], [`discrete`] — filter families
 //! - [`fusion`] — time handling around any filter (delayed / out-of-sequence measurements)
+//!
+//! [`error`] sits outside the layers: every layer may return a [`FilterError`].
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub mod covariance;
@@ -29,3 +31,6 @@ pub mod particle;
 
 /// Re-export of the linear algebra crate that appears in this crate's public API.
 pub use nalgebra;
+
+/// Re-export of the error types used in this crate.
+pub use error::FilterError;

@@ -19,6 +19,10 @@ decisions that shape the code.
    (std) features on `sophus_autodiff`, nalgebra, rand and snafu, and pins nalgebra 0.33.
 6. **Governance:** independent open-source project. Not published yet.
 7. **Domain:** not registered yet.
+8. **Errors:** one non-generic `FilterError` (`Copy`, `Eq`, `#[non_exhaustive]`, payloads only
+   `usize`), so signatures stay `Result<_, FilterError>`. `Gated` carries no test statistic;
+   callers who need it gate themselves using the `UpdateReport`. New variants (UKF mean not
+   converging, measurement older than the rollback horizon) land with the issue that returns them.
 8. **`Manifold` signature:** `boxplus(&self, δ) -> Self` and `boxminus(&self, x) -> Tangent<Self>`,
    with `y.boxminus(&x)` reading y ⊟ x. Both are infallible: tangent vectors always have
    `tangent_dim()` rows, and callers (filters) uphold that. `Tangent<X>` aliases
