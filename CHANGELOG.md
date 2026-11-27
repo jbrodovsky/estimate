@@ -14,6 +14,8 @@ minor version bump (0.x) may contain breaking changes.
   `gaussian`, `particle`, `discrete` and `fusion` modules, and `FilterError`.
 - The `Manifold` trait ($\boxplus$ / $\boxminus$), with `manifold::axioms::check` for testing
   implementations.
+- `Manifold` for `nalgebra::OVector<T, D>`: $\mathbb{R}^n$ for both `Const<N>` (`SVector`) and
+  `Dyn` (`DVector`, with `alloc`).
 - The `std`, `alloc` and `libm` features. The core is `no_std` and builds for
   `thumbv7em-none-eabihf`.
 - A doc-comment standard, enforced by `cargo xtask doc-lint`, with KaTeX math in rustdoc.

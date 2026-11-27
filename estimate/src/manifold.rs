@@ -16,7 +16,8 @@
 //! - [`Manifold`] — the trait, with associated `Scalar` and tangent `Dim` (decision: associated
 //!   types, see `docs/design.md`)
 //! - [`axioms`] — checks of both axioms for any implementor, for property tests
-//! - [`euclidean`] — $\mathbb{R}^n$, the trivial case
+//! - [`euclidean`] — $\mathbb{R}^n$, the trivial case, where $\boxplus$ and $\boxminus$ reduce to
+//!   vector addition and subtraction
 //! - [`so2`], [`so3`] — rotations; perturbation side (left/right) as a type parameter
 //! - later: $SE(2)$, $SE(3)$, $SE_2(3)$, products via `#[derive(Manifold)]`
 //!
@@ -889,8 +890,246 @@ pub mod axioms {
 
 /// $\mathbb{R}^n$ as a manifold: $\boxplus$ is `+`, $\boxminus$ is `-`.
 ///
-/// Implemented directly on `nalgebra::OVector<T, D>`.
-pub mod euclidean {}
+/// ```math
+/// x \boxplus \delta = x + \delta, \qquad y \boxminus x = y - x
+/// ```
+///
+/// One blanket impl on `nalgebra::OVector<T, D>` covers `SVector<T, N>` (stack-allocated,
+/// `no_std`) and `DVector<T>` (heap-allocated, with the `alloc` feature), for any `T: RealField`
+/// (`f32`, `f64`). A vector state needs no wrapper type: the state is its own tangent vector.
+///
+/// The axioms hold up to floating-point rounding, about one ULP of the operands: $1 + 10^{-17}$
+/// rounds to $1$, so $(x \boxplus \delta) \boxminus x$ need not equal $\delta$ exactly.
+///
+/// # Dimensions
+///
+/// For `DVector`, a $\delta$ whose length differs from $x$'s makes nalgebra's `+` and `-` panic.
+/// Matching lengths is the caller's job (the `Manifold` signature decision in `docs/design.md`);
+/// [`axioms::check_tangent_dim`] reports a mismatch as an error in tests.
+///
+/// # Examples
+///
+/// ```
+/// use estimate::manifold::{Manifold, axioms};
+/// use estimate::nalgebra::Vector3;
+///
+/// let (start, end) = (Vector3::new(1.0, 2.0, 3.0), Vector3::new(4.0, 6.0, 3.0));
+/// let delta = end.boxminus(&start);
+/// assert_eq!(delta, Vector3::new(3.0, 4.0, 0.0));
+/// assert_eq!(start.boxplus(&delta), end);
+/// axioms::check(&start, &end, &delta, 1e-12)?;
+///
+/// # #[cfg(feature = "alloc")]
+/// # {
+/// // The same impl serves a state sized at runtime.
+/// use estimate::nalgebra::DVector;
+/// let state = DVector::from_vec(vec![1.0, 2.0]);
+/// assert_eq!(state.tangent_dim(), 2);
+/// # }
+/// # Ok::<(), axioms::AxiomViolation<f64>>(())
+/// ```
+pub mod euclidean {
+    use super::{Allocator, DefaultAllocator, Dim, Manifold, OVector, RealField, Tangent};
+
+    impl<T, D> Manifold for OVector<T, D>
+    where
+        T: RealField,
+        D: Dim,
+        DefaultAllocator: Allocator<D>,
+    {
+        type Scalar = T;
+        type Dim = D;
+        fn tangent_dim(&self) -> usize {
+            self.nrows()
+        }
+        /// $x \boxplus \delta = x + \delta$.
+        fn boxplus(&self, delta: &Tangent<Self>) -> Self {
+            self + delta
+        }
+        /// $y \boxminus x = y - x$.
+        fn boxminus(&self, x: &Self) -> Tangent<Self> {
+            self - x
+        }
+    }
+    #[cfg(test)]
+    mod tests {
+        use nalgebra::{RealField, SVector, Scalar, Vector3};
+        use proptest::prelude::*;
+        use proptest::strategy::ValueTree;
+        use proptest::test_runner::TestRunner;
+
+        use super::super::{Manifold, axioms};
+
+        /// Elements $\pm 10^e$ with $e \in [-30, 30)$, in scalar type `T`: magnitudes spread over
+        /// 60 decades, well inside the `f32` range so sums never overflow.
+        fn element<T: RealField>() -> impl Strategy<Value = T> {
+            (any::<bool>(), -30.0..30.0_f64).prop_map(|(negative, exponent)| {
+                let magnitude = 10.0_f64.powf(exponent);
+                nalgebra::convert(if negative { -magnitude } else { magnitude })
+            })
+        }
+
+        /// A vector in $\mathbb{R}^N$ whose $N$ elements are each drawn from `element`.
+        fn svector_variable<S, const N: usize>(element: S) -> impl Strategy<Value = SVector<S::Value, N>>
+        where
+            S: Strategy,
+            S::Value: Scalar,
+        {
+            prop::array::uniform::<S, N>(element).prop_map(SVector::from)
+        }
+
+        /// Axiom tolerance for one sample: a few ULPs of its largest operands.
+        ///
+        /// Each residual component is two roundings of relative error $\epsilon / 2$ on operands
+        /// no larger than
+        /// $m_i = \max(\lvert x_i \rvert, \lvert y_i \rvert, \lvert \delta_i \rvert)$:
+        ///
+        /// ```math
+        /// \lvert r_i \rvert \le 2 \epsilon m_i
+        /// \quad \Rightarrow \quad
+        /// \lVert r \rVert \le 2 \epsilon \lVert m \rVert
+        /// ```
+        macro_rules! ulp_tolerance {
+            ($scalar:ty, $state:expr, $other:expr, $delta:expr) => {{
+                let scale = $state.abs().sup(&$other.abs()).sup(&$delta.abs());
+                2.0 * <$scalar>::EPSILON * scale.norm()
+            }};
+        }
+
+        /// One axiom proptest per `name: scalar, N;` row, on `SVector<scalar, N>`, at
+        /// [`ulp_tolerance`].
+        macro_rules! svector_axioms {
+            ($($name:ident: $scalar:ty, $n:literal;)*) => {
+                proptest! {
+                    $(
+                        #[test]
+                        fn $name(
+                            state in svector_variable::<_, $n>(element::<$scalar>()),
+                            other in svector_variable::<_, $n>(element::<$scalar>()),
+                            delta in svector_variable::<_, $n>(element::<$scalar>()),
+                        ) {
+                            let tol = ulp_tolerance!($scalar, state, other, delta);
+                            axioms::check(&state, &other, &delta, tol)?;
+                        }
+                    )*
+                }
+            };
+        }
+
+        svector_axioms! {
+            r1_f32: f32, 1;
+            r2_f32: f32, 2;
+            r3_f32: f32, 3;
+            r4_f32: f32, 4;
+            r6_f32: f32, 6;
+            r9_f32: f32, 9;
+            r15_f32: f32, 15;
+            r1_f64: f64, 1;
+            r2_f64: f64, 2;
+            r3_f64: f64, 3;
+            r4_f64: f64, 4;
+            r6_f64: f64, 6;
+            r9_f64: f64, 9;
+            r15_f64: f64, 15;
+        }
+
+        /// $1 + 10^{-17}$ rounds to $1$, so $(x \boxplus \delta) \boxminus x = 0 \ne \delta$:
+        /// the axioms are not exact, and the tolerance cannot be zero.
+        #[test]
+        fn not_exact() {
+            let (state, delta) = (SVector::<f64, 1>::new(1.0), SVector::<f64, 1>::new(1e-17));
+            assert!(axioms::check(&state, &state, &delta, 0.0).is_err());
+        }
+
+        /// A quarter of [`ulp_tolerance`] fails on some samples, so the residual really is about
+        /// one ULP and the bound is doing work.
+        ///
+        /// One dimension, so the residual norm is a single component, and a fixed seed, so the
+        /// count is reproducible.
+        #[test]
+        fn tolerance_is_not_vacuous() {
+            let sample = (
+                svector_variable::<_, 1>(element::<f64>()),
+                svector_variable::<_, 1>(element::<f64>()),
+                svector_variable::<_, 1>(element::<f64>()),
+            );
+            let mut runner = TestRunner::deterministic();
+            let too_tight = (0..10_000)
+                .filter_map(|_| sample.new_tree(&mut runner).ok())
+                .map(|tree| tree.current())
+                .filter(|(state, other, delta)| {
+                    let tol: f64 = 0.25 * ulp_tolerance!(f64, state, other, delta);
+                    axioms::check(state, other, delta, tol).is_err()
+                })
+                .count();
+            std::println!("{too_tight} of 10000 samples exceed a quarter of the tolerance");
+            assert!(too_tight > 0);
+        }
+
+        /// A hand-checked $\mathbb{R}^3$ step: $\boxplus$ and $\boxminus$ are `+` and `-`.
+        #[test]
+        fn boxplus_and_boxminus_are_vector_arithmetic() {
+            let (start, end) = (Vector3::new(1.0, 2.0, 3.0), Vector3::new(4.0, 6.0, 3.0));
+            assert_eq!(end.boxminus(&start), Vector3::new(3.0, 4.0, 0.0));
+            assert_eq!(start.boxplus(&Vector3::new(3.0, 4.0, 0.0)), end);
+            assert_eq!(start.tangent_dim(), 3);
+        }
+
+        #[cfg(feature = "alloc")]
+        mod dynamic {
+            use nalgebra::{DVector, Scalar};
+            use proptest::prelude::*;
+
+            use super::{axioms, element};
+
+            /// Largest tangent dimension $n$ sampled; $n$ is drawn from $[1, n_{\max}]$.
+            const MAX_DIM: usize = 16;
+
+            /// A vector in $\mathbb{R}^n$ whose $n$ elements are each drawn from `element`.
+            fn dvector_variable<S>(element: S, n: usize) -> impl Strategy<Value = DVector<S::Value>>
+            where
+                S: Strategy,
+                S::Value: Scalar,
+            {
+                proptest::collection::vec(element, n).prop_map(DVector::from_vec)
+            }
+
+            /// One axiom proptest per `name: scalar;` row, on `DVector<scalar>` with $n$ drawn at
+            /// runtime, so $x$, $y$ and $\delta$ share one $n$; at [`ulp_tolerance`].
+            macro_rules! dvector_axioms {
+                ($($name:ident: $scalar:ty;)*) => {
+                    proptest! {
+                        $(
+                            #[test]
+                            fn $name(
+                                (state, other, delta) in (1..=MAX_DIM).prop_flat_map(|n| (
+                                    dvector_variable(element::<$scalar>(), n),
+                                    dvector_variable(element::<$scalar>(), n),
+                                    dvector_variable(element::<$scalar>(), n),
+                                ))
+                            ) {
+                                let tol = ulp_tolerance!($scalar, state, other, delta);
+                                axioms::check(&state, &other, &delta, tol)?;
+                            }
+                        )*
+                    }
+                };
+            }
+
+            dvector_axioms! {
+                rn_f32: f32;
+                rn_f64: f64;
+            }
+
+            #[test]
+            fn mismatched_delta_is_reported_not_panicked() {
+                let state = DVector::<f64>::zeros(3);
+                let r = axioms::check(&state, &state, &DVector::zeros(2), 1e-9);
+                assert_eq!(r, Err(axioms::AxiomViolation::TangentDim { expected: 3, found: 2 }));
+            }
+        }
+    }
+}
 /// $SO(2)$: planar rotations. Commutative, so left and right perturbations coincide.
 pub mod so2 {}
 /// $SO(3)$: 3-D rotations, stored as a unit quaternion.
